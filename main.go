@@ -22,17 +22,27 @@ func main() {
 	inputFileName := "testdata/workflow.json"
 	outputFileName := "output.sql"
 	basePathForFiles := "testdata"
-	parseTransformationFiles(inputFileName, basePathForFiles, outputFileName)
+
+	descriptor, err := parseJsonToDescriptor(inputFileName)
+	if err != nil {
+		log.Fatalln("Failed to create a descriptor from the json file", err)
+	}
+	concatenateFiles(descriptor, basePathForFiles, outputFileName)
 }
 
-func parseTransformationFiles(inputFileName string, basePathForFiles string, outputFileName string) {
+// parseJsonToDescriptor receives a Json file with some configuration and
+// it returns a descriptor containing all the information required to
+// concatenate the files (in order)
+func parseJsonToDescriptor(jsonFile string) (HLTPDescriptor, error) {
+	var descriptor HLTPDescriptor
+
 	// Open our inputJsonFile
-	inputJsonFile, err := os.Open(inputFileName)
+	inputJsonFile, err := os.Open(jsonFile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		log.Fatalln("Failed to open file for reading:", err)
 	}
-	log.Println("Successfully Opened " + inputFileName)
+	log.Println("Successfully Opened " + jsonFile)
 	// defer the closing of our inputJsonFile so that we can parse it later on
 	defer inputJsonFile.Close()
 
@@ -40,13 +50,20 @@ func parseTransformationFiles(inputFileName string, basePathForFiles string, out
 	byteValue, err := ioutil.ReadAll(inputJsonFile)
 	if err != nil {
 		log.Fatalln("Failed to read file before parsing:", err)
+		return descriptor, err
 	}
 
-	var descriptor HLTPDescriptor
 	err = json.Unmarshal([]byte(byteValue), &descriptor)
 	if err != nil {
 		log.Fatalln("Failed to parse the descriptor from JSON data", err)
+		return descriptor, err
 	}
+	return descriptor, nil
+}
+
+// concatenateFiles receives a descriptor with the location of the files and
+// it concatenates all of them on the outputFileName
+func concatenateFiles(descriptor HLTPDescriptor, basePathForFiles string, outputFileName string) {
 
 	out, err := os.OpenFile(outputFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -55,16 +72,16 @@ func parseTransformationFiles(inputFileName string, basePathForFiles string, out
 	defer out.Close()
 
 	for _, e := range descriptor.Wrapper.Schema {
-		concatenateFiles(basePathForFiles + "/" + e, out)
+		concatenateFile(basePathForFiles+"/"+e, out)
 	}
 
 	for _, e := range descriptor.Wrapper.Transformation {
-		concatenateFiles(basePathForFiles + "/" + e, out)
+		concatenateFile(basePathForFiles+"/"+e, out)
 	}
 }
 
-// concatenateFiles reads the inFile and write its contests to the outFile (pointer)
-func concatenateFiles(inFile string, outFile *os.File) {
+// concatenateFile reads the inFile and write its contests to the outFile (pointer)
+func concatenateFile(inFile string, outFile *os.File) {
 	f, err := os.Open(inFile)
 	if err != nil {
 		log.Fatalln("Failed to open the file:", err)
