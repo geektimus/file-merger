@@ -8,7 +8,7 @@
       "schema/schema-02.sql"
     ],
     "transformation": [
-      "settings/setting-01.sql",
+      "settings/settings-01.sql",
       "transformation/transformation-01.sql",
       "variables/variables-01.sql",
       "transformation/transformation-02.sql",
