@@ -1,0 +1,18 @@
+{
+  "transform": {
+    "jars": [
+      "${project.build.finalName}.jar"
+    ],
+    "schema": [
+      "schema/schema-01.sql",
+      "schema/schema-02.sql"
+    ],
+    "transformation": [
+      "settings/setting-01.sql",
+      "transformation/transformation-01.sql",
+      "variables/variables-01.sql",
+      "transformation/transformation-02.sql",
+      "settings/settings-02.sql"
+    ]
+  }
+}
