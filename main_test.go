@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
@@ -47,5 +48,17 @@ func TestInvalidJsonToDescriptor(t *testing.T) {
 	_, err := parseJsonToDescriptor("testdata/non-existent.json")
 	if err == nil {
 		t.Fatal("It should fail because the json file doesn't exist")
+	}
+}
+
+func TestConcatenateFiles(t *testing.T) {
+	outputFileName := "test-output.txt"
+	descriptor, _ := parseJsonToDescriptor("testdata/workflow.json")
+	err := concatenateFiles(descriptor, "testdata", outputFileName)
+	if err != nil {
+		t.Fatal("Could not concatenate the files")
+	}
+	if err := os.Remove(outputFileName); err != nil {
+		t.Fatal("Could not remove the test output file")
 	}
 }
