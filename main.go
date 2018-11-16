@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -20,15 +21,24 @@ type HLTPDescriptor struct {
 }
 
 func main() {
-	inputFileName := "testdata/workflow.json"
-	outputFileName := "output.sql"
-	basePathForFiles := "testdata"
+	inputPtr := flag.String("input", "", "Input JSON file containing the descriptor")
+	outputPtr := flag.String("output", "output.txt", "Output file name / location (local folder by default)")
+	inBasePathPtr := flag.String("basePath", "", "Folder containing the files referenced by the descriptor")
+	flag.Parse()
 
-	descriptor, err := parseJsonToDescriptor(inputFileName)
+	if *inputPtr == "" {
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	descriptor, err := parseJsonToDescriptor(*inputPtr)
 	if err != nil {
 		log.Fatalln("Failed to create a descriptor from the json file", err)
 	}
-	concatenateFiles(descriptor, basePathForFiles, outputFileName)
+
+	if err := concatenateFiles(descriptor, *inBasePathPtr, *outputPtr); err != nil {
+		log.Fatalf("failed to concatenate the files = %v", err)
+	}
 }
 
 // parseJsonToDescriptor receives a Json file with some configuration and
@@ -63,19 +73,22 @@ func parseJsonToDescriptor(jsonFile string) (HLTPDescriptor, error) {
 // it concatenates all of them on the outputFileName
 func concatenateFiles(descriptor HLTPDescriptor, basePathForFiles string, outputFileName string) error {
 
-	out, err := os.OpenFile(outputFileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	out, err := os.OpenFile(outputFileName, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open file for writing %v", err)
 	}
 	defer out.Close()
 
-	for _, e := range descriptor.Wrapper.Schema {
-		concatenateFile(basePathForFiles+"/"+e, out)
+	wrapper := descriptor.Wrapper
+	paths := append(wrapper.Schema, wrapper.Transformation...)
+
+	for _, e := range paths {
+		err := concatenateFile(basePathForFiles+"/"+e, out)
+		if err != nil {
+			return err
+		}
 	}
 
-	for _, e := range descriptor.Wrapper.Transformation {
-		concatenateFile(basePathForFiles+"/"+e, out)
-	}
 	return nil
 }
 
@@ -83,11 +96,11 @@ func concatenateFiles(descriptor HLTPDescriptor, basePathForFiles string, output
 func concatenateFile(inFile string, outFile *os.File) error {
 	f, err := os.Open(inFile)
 	if err != nil {
-		return fmt.Errorf("failed to open the file %v", err)
+		return err
 	}
 	n, err := io.Copy(outFile, f)
 	if err != nil {
-		return fmt.Errorf("failed to append the files %v", err)
+		return err
 	}
 	log.Printf("Wrote %d bytes of %s to the end of %s\n", n, inFile, outFile.Name())
 	return nil
