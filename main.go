@@ -16,6 +16,10 @@ type Wrapper struct {
 	Transformation []string `json:"transformation"`
 }
 
+func (w Wrapper) flat() []string {
+	return append(w.Schema, w.Transformation...)
+}
+
 type Descriptor struct {
 	Wrapper Wrapper `json:"transform"`
 }
@@ -80,9 +84,8 @@ func concatenateFiles(descriptor Descriptor, basePathForFiles string, outputFile
 	defer out.Close()
 
 	wrapper := descriptor.Wrapper
-	paths := append(wrapper.Schema, wrapper.Transformation...)
 
-	for _, e := range paths {
+	for _, e := range wrapper.flat() {
 		err := concatenateFile(basePathForFiles+"/"+e, out)
 		if err != nil {
 			return err
