@@ -10,14 +10,14 @@ import (
 	"os"
 )
 
-type HLTPTransformationWrapper struct {
+type Wrapper struct {
 	Jars           []string `json:"jars"`
 	Schema         []string `json:"schema"`
 	Transformation []string `json:"transformation"`
 }
 
-type HLTPDescriptor struct {
-	Wrapper HLTPTransformationWrapper `json:"transform"`
+type Descriptor struct {
+	Wrapper Wrapper `json:"transform"`
 }
 
 func main() {
@@ -44,8 +44,8 @@ func main() {
 // parseJsonToDescriptor receives a Json file with some configuration and
 // it returns a descriptor containing all the information required to
 // concatenate the files (in order)
-func parseJsonToDescriptor(jsonFile string) (HLTPDescriptor, error) {
-	var descriptor HLTPDescriptor
+func parseJsonToDescriptor(jsonFile string) (Descriptor, error) {
+	var descriptor Descriptor
 
 	// Open our inputJsonFile
 	inputJsonFile, err := os.Open(jsonFile)
@@ -71,7 +71,7 @@ func parseJsonToDescriptor(jsonFile string) (HLTPDescriptor, error) {
 
 // concatenateFiles receives a descriptor with the location of the files and
 // it concatenates all of them on the outputFileName
-func concatenateFiles(descriptor HLTPDescriptor, basePathForFiles string, outputFileName string) error {
+func concatenateFiles(descriptor Descriptor, basePathForFiles string, outputFileName string) error {
 
 	out, err := os.OpenFile(outputFileName, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
