@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/sirupsen/logrus"
 	"os"
 	"testing"
 )
@@ -52,6 +53,7 @@ func TestInvalidJsonToDescriptor(t *testing.T) {
 }
 
 func TestConcatenateFiles(t *testing.T) {
+	logrus.SetLevel(logrus.ErrorLevel)
 	outputFileName := "test-output.txt"
 	descriptor, _ := parseJsonToDescriptor("testdata/workflow.json")
 	err := concatenateFiles(descriptor, "testdata", outputFileName)
