@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 )
 
@@ -22,6 +22,18 @@ func (w Wrapper) flat() []string {
 
 type Descriptor struct {
 	Wrapper Wrapper `json:"transform"`
+}
+
+func init() {
+	// Log as JSON instead of the default ASCII formatter.
+	log.SetFormatter(&log.JSONFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+
+	// Only log the warning severity or above.
+	log.SetLevel(log.InfoLevel)
 }
 
 func main() {
@@ -58,7 +70,12 @@ func parseJsonToDescriptor(jsonFile string) (Descriptor, error) {
 		return descriptor, fmt.Errorf("failed to open file for reading %v", err)
 	}
 	// defer the closing of our inputJsonFile so that we can parse it later on
-	defer inputJsonFile.Close()
+	defer func() {
+		err := inputJsonFile.Close()
+		if err != nil {
+			log.Errorf("failed to close the file %v", err)
+		}
+	}()
 
 	// bytes
 	byteValue, err := ioutil.ReadAll(inputJsonFile)
@@ -81,7 +98,12 @@ func concatenateFiles(descriptor Descriptor, basePathForFiles string, outputFile
 	if err != nil {
 		return fmt.Errorf("failed to open file for writing %v", err)
 	}
-	defer out.Close()
+	defer func() {
+		err := out.Close()
+		if err != nil {
+			log.Errorf("failed to close the file %v", err)
+		}
+	}()
 
 	wrapper := descriptor.Wrapper
 
