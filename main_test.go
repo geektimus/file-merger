@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 func TestValidJsonToDescriptor(t *testing.T) {
-	descriptor, err := parseJsonToDescriptor("testdata/workflow.json")
+	descriptor, err := parseJSONToDescriptor("testdata/workflow.json")
 	if err != nil {
 		t.Fatal("Could not parse the json configuration required for the descriptor")
 	}
@@ -46,7 +47,7 @@ func TestValidJsonToDescriptor(t *testing.T) {
 }
 
 func TestInvalidJsonToDescriptor(t *testing.T) {
-	_, err := parseJsonToDescriptor("testdata/non-existent.json")
+	_, err := parseJSONToDescriptor("testdata/non-existent.json")
 	if err == nil {
 		t.Fatal("It should fail because the json file doesn't exist")
 	}
@@ -55,7 +56,7 @@ func TestInvalidJsonToDescriptor(t *testing.T) {
 func TestConcatenateFiles(t *testing.T) {
 	logrus.SetLevel(logrus.ErrorLevel)
 	outputFileName := "test-output.txt"
-	descriptor, _ := parseJsonToDescriptor("testdata/workflow.json")
+	descriptor, _ := parseJSONToDescriptor("testdata/workflow.json")
 	err := concatenateFiles(descriptor, "testdata", outputFileName)
 	if err != nil {
 		t.Fatal("Could not concatenate the files")

@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
+// Wrapper contains the definitions of the fields that describe a transformation
 type Wrapper struct {
 	Jars           []string `json:"jars"`
 	Schema         []string `json:"schema"`
@@ -20,6 +22,7 @@ func (w Wrapper) flat() []string {
 	return append(w.Schema, w.Transformation...)
 }
 
+// Descriptor is just a container for the wrapper object
 type Descriptor struct {
 	Wrapper Wrapper `json:"transform"`
 }
@@ -47,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	descriptor, err := parseJsonToDescriptor(*inputPtr)
+	descriptor, err := parseJSONToDescriptor(*inputPtr)
 	if err != nil {
 		log.Fatalln("Failed to create a descriptor from the json file", err)
 	}
@@ -57,28 +60,28 @@ func main() {
 	}
 }
 
-// parseJsonToDescriptor receives a Json file with some configuration and
+// parseJSONToDescriptor receives a Json file with some configuration and
 // it returns a descriptor containing all the information required to
 // concatenate the files (in order)
-func parseJsonToDescriptor(jsonFile string) (Descriptor, error) {
+func parseJSONToDescriptor(jsonFile string) (Descriptor, error) {
 	var descriptor Descriptor
 
-	// Open our inputJsonFile
-	inputJsonFile, err := os.Open(jsonFile)
+	// Open our inputJSONFile
+	inputJSONFile, err := os.Open(jsonFile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		return descriptor, fmt.Errorf("failed to open file for reading %v", err)
 	}
-	// defer the closing of our inputJsonFile so that we can parse it later on
+	// defer the closing of our inputJSONFile so that we can parse it later on
 	defer func() {
-		err := inputJsonFile.Close()
+		err := inputJSONFile.Close()
 		if err != nil {
 			log.Errorf("failed to close the file %v", err)
 		}
 	}()
 
 	// bytes
-	byteValue, err := ioutil.ReadAll(inputJsonFile)
+	byteValue, err := ioutil.ReadAll(inputJSONFile)
 	if err != nil {
 		return descriptor, fmt.Errorf("failed to read file before parsing %v", err)
 	}
