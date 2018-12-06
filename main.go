@@ -2,14 +2,21 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 
+	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 )
+
+// MergeCommand is a representation of the intention to merge the file contents
+type MergeCommand struct {
+	Input    flags.Filename `short:"i" long:"inputFile" description:"Input JSON file containing the descriptor" required:"true"`
+	Output   flags.Filename `short:"o" long:"outputFile" description:"Output file name / location (local folder by default)" default:"output.txt"`
+	BasePath string         `short:"b" long:"basePath" description:"Folder containing the files referenced by the descriptor"`
+}
 
 // Wrapper contains the definitions of the fields that describe a transformation
 type Wrapper struct {
@@ -40,22 +47,22 @@ func init() {
 }
 
 func main() {
-	inputPtr := flag.String("input", "", "Input JSON file containing the descriptor")
-	outputPtr := flag.String("output", "output.txt", "Output file name / location (local folder by default)")
-	inBasePathPtr := flag.String("basePath", "", "Folder containing the files referenced by the descriptor")
-	flag.Parse()
+	var command MergeCommand
 
-	if *inputPtr == "" {
-		flag.PrintDefaults()
-		os.Exit(1)
+	if _, err := flags.ParseArgs(&command, os.Args); err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
+		} else {
+			os.Exit(1)
+		}
 	}
 
-	descriptor, err := parseJSONToDescriptor(*inputPtr)
+	descriptor, err := parseJSONToDescriptor(string(command.Input))
 	if err != nil {
 		log.Fatalln("Failed to create a descriptor from the json file", err)
 	}
 
-	if err := concatenateFiles(descriptor, *inBasePathPtr, *outputPtr); err != nil {
+	if err := concatenateFiles(descriptor, command.BasePath, string(command.Output)); err != nil {
 		log.Fatalf("failed to concatenate the files = %v", err)
 	}
 }
