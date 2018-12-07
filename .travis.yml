@@ -22,12 +22,10 @@ notifications:
 script:
   - go test -v -race ./...  # Run all the tests with the race detector enabled
 
-# blocklist
 branches:
+  # safe list
+  only:
+    - master
+    # block list
   except:
   - /^feature.*$/
-
-# safelist
-branches:
-  only:
-  - master
